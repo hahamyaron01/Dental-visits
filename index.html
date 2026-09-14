@@ -1198,7 +1198,7 @@ document.getElementById('gPass').addEventListener('keydown',e=>{if(e.key==='Ente
 function startSync(){
   unsub.push(COL_V().onSnapshot(snap=>{
     visits=snap.docs.map(d=>({id:d.id,...d.data()}));
-    setDot(!snap.metadata.fromCache);
+    setDot(navigator.onLine&&!snap.metadata.hasPendingWrites);
     render();
   },err=>{console.error(err);toast('אין גישה לנתונים — בדוק את כללי האבטחה')}));
   unsub.push(DOC_C().onSnapshot(d=>{contacts=(d.data()||{}).map||{};render()},()=>{}));
@@ -1210,7 +1210,7 @@ auth.onAuthStateChanged(async user=>{
     gate.classList.add('hide');
     document.getElementById('whoNote').textContent='מחוברת כ: '+(user.email||'');
     try{docs=await files.all()||[]}catch(e){files.ok=false;docs=[]}
-    startSync();render();
+    setDot(navigator.onLine);startSync();render();
   }else{
     unsub.forEach(f=>{try{f()}catch(e){}});unsub=[];
     visits=[];contacts={};settings={name:'',phone:'',mail:''};uid='';
