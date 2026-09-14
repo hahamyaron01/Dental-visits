@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ביקורי מרפאות שיניים · TARO</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0D3B37">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ביקורים">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Assistant:wght@400;600&display=swap" rel="stylesheet">
@@ -1218,6 +1226,7 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('gPass').value='';
   }
 });
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('online',()=>setDot(true));
 window.addEventListener('offline',()=>setDot(false));
 </script>
