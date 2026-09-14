@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Assistant:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{--deep:#0D3B37;--teal:#16706A;--mint:#E4EFEB;--paper:#FBFCFB;--amber:#F2A93B;--ink:#0A1F1D;--muted:#6B807C;--line:#D8E4E0;--danger:#C0553F;--r:14px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -156,6 +159,21 @@ textarea{min-height:82px;resize:vertical}
 .vlist{margin-top:10px}
 .vlist button{display:block;width:100%;text-align:right;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px;font-size:14px}
 .vlist b{font-family:"Heebo"}
+#gate{position:fixed;inset:0;z-index:200;background:var(--deep);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:28px 22px;overflow-y:auto}
+#gate.hide{display:none!important}
+#gate h1{margin:0 0 4px;font-size:26px;font-weight:900}
+#gate .sub{color:#9CCFC7;font-size:14px;margin-bottom:26px}
+#gate label{display:block;font-size:12.5px;color:#9CCFC7;font-weight:600;margin-bottom:5px}
+#gate .fld{margin-bottom:14px;position:relative}
+#gate input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;padding:14px}
+#gate input::placeholder{color:rgba(255,255,255,.45)}
+#gate .eye{position:absolute;inset-inline-start:10px;inset-block-end:9px;font-size:12px;color:#9CCFC7;background:none;padding:4px 6px}
+#gate button.go{width:100%;background:#fff;color:var(--deep);padding:15px;border-radius:12px;font-family:"Heebo";font-weight:700;font-size:16px;margin-top:6px}
+#gate .err{background:rgba(192,85,63,.25);border:1px solid #C0553F;border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:14px;display:none}
+#gate .err.show{display:block}
+.syncdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#6FCF97;margin-inline-end:5px;vertical-align:middle}
+.syncdot.off{background:var(--amber)}
+.who{font-size:11px;color:#7FBDB4;margin-top:6px}
 .toast{position:fixed;inset-block-end:84px;inset-inline:16px;background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;text-align:center;z-index:80;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;font-size:14px}
 .toast.show{opacity:1;transform:translateY(0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -164,10 +182,20 @@ textarea{min-height:82px;resize:vertical}
 </head>
 <body>
 
+<section id="gate">
+  <h1>ביקורי מרפאות שיניים</h1>
+  <p class="sub">TARO · כניסה למערכת</p>
+  <div class="err" id="gErr"></div>
+  <div class="fld"><label for="gUser">שם משתמש</label><input id="gUser" type="email" inputmode="email" autocomplete="username" placeholder="rep@taro.local"></div>
+  <div class="fld"><label for="gPass">סיסמה</label><input id="gPass" type="password" autocomplete="current-password" placeholder="••••••"><button class="eye" id="gEye" type="button">הצגה</button></div>
+  <button class="go" id="gGo">כניסה</button>
+  <p class="who" style="text-align:center;margin-top:14px">ההתחברות נשמרת — לא תצטרכי להתחבר שוב במכשיר הזה.</p>
+</section>
+
 <header class="top">
   <div class="brandrow">
     <div><p class="eyebrow">TARO · שטח</p><h1>ביקורי מרפאות שיניים</h1></div>
-    <button class="gear" id="openSettings">הגדרות</button>
+    <button class="gear" id="openSettings"><span class="syncdot" id="dot"></span>הגדרות</button>
   </div>
   <div class="seg" id="seg">
     <button data-view="day">יום</button>
@@ -370,23 +398,43 @@ textarea{min-height:82px;resize:vertical}
   <button class="save" id="gSave">שמירת ההגדרות</button>
   <button class="save teal" id="vcfOut" style="margin-top:8px">ייצוא אנשי הקשר לכרטיסי vCard</button>
   <p class="hint" id="pickNote"></p>
+  <p class="hint" id="whoNote"></p>
+  <button class="mini warn" id="gOut" style="margin-top:6px">יציאה מהמערכת</button>
 </section>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============== key-value storage ============== */
-const kv={
-  async get(k,def){
-    if(window.storage){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):def}catch(e){return def}}
-    try{const raw=localStorage.getItem(k);return raw?JSON.parse(raw):def}catch(e){return def}
-  },
-  async set(k,v){
-    if(window.storage){try{await window.storage.set(k,JSON.stringify(v))}catch(e){}return}
-    try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('השמירה נכשלה — אין מקום פנוי')}
-  }
+/* ============== firebase ============== */
+const firebaseConfig={
+  apiKey:"AIzaSyA8NcptIlVL9WCQahOsy1aRFEb0q3Y6UtM",
+  authDomain:"dental-visits.firebaseapp.com",
+  projectId:"dental-visits",
+  storageBucket:"dental-visits.firebasestorage.app",
+  messagingSenderId:"686981248313",
+  appId:"1:686981248313:web:685f6396573823f77864e8"
 };
-const K_V='taro_dental_visits_v1',K_C='taro_dental_contacts_v1',K_S='taro_dental_settings_v1';
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+let uid='',uname='',unsub=[];
+
+const COL_V=()=>db.collection('visits'), DOC_C=()=>db.doc('meta/contacts');
+async function saveVisit(v){
+  const {id,...rest}=v;
+  try{COL_V().doc(id).set({...rest,updatedBy:uname,updatedAt:Date.now()})}catch(e){toast('השמירה נכשלה')}
+}
+async function removeVisit(id){try{COL_V().doc(id).delete()}catch(e){toast('המחיקה נכשלה')}}
+async function saveContacts(){try{DOC_C().set({map:contacts})}catch(e){toast('שמירת אנשי הקשר נכשלה')}}
+async function saveSettings(){try{db.doc('users/'+uid).set(settings)}catch(e){}}
+async function saveMany(list){
+  try{let b=db.batch(),n=0;
+    for(const v of list){const {id,...rest}=v;b.set(COL_V().doc(id),{...rest,updatedBy:uname,updatedAt:Date.now()});
+      if(++n===400){await b.commit();b=db.batch();n=0}}
+    if(n)await b.commit();
+  }catch(e){toast('חלק מהרשומות לא נשמרו')}
+}
+function setDot(on){const d=document.getElementById('dot');if(d)d.classList.toggle('off',!on)}
 
 /* ============== file storage ============== */
 const files={
@@ -723,9 +771,11 @@ document.getElementById('save').onclick=async()=>{
   const prev=contacts[data.clinic]||{};
   contacts[data.clinic]={name:prev.name||data.staff||'',phone:vPhone.value.trim()||prev.phone||'',
     mail:vMail.value.trim()||prev.mail||'',city:prev.city||''};
-  await kv.set(K_C,contacts);
+  saveContacts();
   for(const f of pending)await saveFile(f,id);
-  pending=[];await kv.set(K_V,visits);closeAll();render();toast('הביקור נשמר');
+  pending=[];
+  await saveVisit(visits.find(x=>x.id===id));
+  closeAll();render();toast('הביקור נשמר');
 };
 
 /* ============== contact sheet ============== */
@@ -766,11 +816,12 @@ document.getElementById('cSave').onclick=async()=>{
   if(renamed){
     const merging=!!contacts[key];
     if(!confirm(merging?`"${cKey}" ימוזג לתוך "${key}" — כל הביקורים יעברו. להמשיך?`:`לשנות את שם המרפאה ל-"${key}"? כל הביקורים יעודכנו.`))return;
-    visits.forEach(v=>{if(v.clinic===cKey)v.clinic=key});
-    delete contacts[cKey];await kv.set(K_V,visits);
+    const moved=visits.filter(v=>v.clinic===cKey);
+    moved.forEach(v=>v.clinic=key);
+    delete contacts[cKey];await saveMany(moved);
   }
   contacts[key]={name:cPerson.value.trim(),phone:cPhone.value.trim(),mail:cMail.value.trim(),city:cCity.value.trim()};
-  await kv.set(K_C,contacts);closeAll();tab='contacts';render();
+  await saveContacts();closeAll();tab='contacts';render();
   toast(isNew?'המרפאה נוספה':renamed?'השם עודכן בכל הביקורים':'פרטי הקשר נשמרו');
 };
 
@@ -857,7 +908,7 @@ document.getElementById('impGo').onclick=async()=>{
     const g=(r,sel)=>{const i=+sel.value;return i>=0?String(r[i]==null?'':r[i]).trim():''};
     impRows.forEach(r=>{const key=g(r,mClinic);if(key)put(key,{name:g(r,mPerson),phone:g(r,mPhone),mail:g(r,mMail),city:g(r,mCity)})});
   }
-  await kv.set(K_C,contacts);
+  await saveContacts();
   impRows=[];impVcards=null;document.getElementById('impGo').classList.add('hide');
   closeAll();tab='contacts';render();toast(`יובאו ${added} מרפאות חדשות · ${upd} עודכנו`);
 };
@@ -895,7 +946,7 @@ document.getElementById('pkList').onclick=async e=>{
   if(pick){setClinic(pick.dataset.pick);closeS('pickSheet');return}
   if(add){
     const name=document.getElementById('pkQ').value.trim();if(!name)return;
-    if(!contacts[name]){contacts[name]={name:'',phone:'',mail:'',city:''};await kv.set(K_C,contacts);fillDatalists()}
+    if(!contacts[name]){contacts[name]={name:'',phone:'',mail:'',city:''};await saveContacts();fillDatalists()}
     setClinic(name);closeS('pickSheet');toast('המרפאה נוספה לרשימת הלקוחות');
   }
 };
@@ -1046,8 +1097,9 @@ document.getElementById('sPick').onclick=async()=>{
 async function rememberContact(){
   if(sTo.value!=='clinic'||!sClinic.value)return;
   const prev=contacts[sClinic.value]||{};
-  contacts[sClinic.value]={name:prev.name||'',phone:document.getElementById('sPhone').value.trim(),mail:document.getElementById('sEmail').value.trim()};
-  await kv.set(K_C,contacts);
+  contacts[sClinic.value]={name:prev.name||'',phone:document.getElementById('sPhone').value.trim(),
+    mail:document.getElementById('sEmail').value.trim(),city:prev.city||''};
+  await saveContacts();
 }
 document.getElementById('sWa').onclick=async()=>{await rememberContact();
   openWa(document.getElementById('sBody').value,sTo.value==='clinic'?document.getElementById('sPhone').value:settings.phone)};
@@ -1060,7 +1112,8 @@ document.getElementById('openSettings').onclick=()=>{
   document.getElementById('pickNote').textContent=canPick?'שליפה ישירה מאנשי הקשר זמינה במכשיר הזה.':'שליפה ישירה מאנשי הקשר לא נתמכת בדפדפן הזה — אפשר לייבא קובץ vCard או להקליד ידנית.';
   openS('setSheet');
 };
-document.getElementById('gSave').onclick=async()=>{settings={name:gName.value.trim(),phone:gPhone.value.trim(),mail:gMail.value.trim()};await kv.set(K_S,settings);closeAll();toast('ההגדרות נשמרו')};
+document.getElementById('gSave').onclick=async()=>{settings={name:gName.value.trim(),phone:gPhone.value.trim(),mail:gMail.value.trim()};await saveSettings();closeAll();toast('ההגדרות נשמרו')};
+document.getElementById('gOut').onclick=()=>{if(confirm('לצאת מהמערכת? תצטרכי להתחבר שוב.'))auth.signOut()};
 document.getElementById('vcfOut').onclick=()=>{
   const t=vcfAll();if(!t)return toast('אין אנשי קשר עם מספר לשמירה');
   dl(new Blob([t],{type:'text/vcard'}),`מרפאות שיניים ${iso(new Date())}.vcf`);toast('הקובץ ירד — פתיחה שלו תשמור את אנשי הקשר בנייד');
@@ -1083,10 +1136,10 @@ document.getElementById('list').onclick=async e=>{
   const t=e.target.closest('[data-toggle]'),ed=e.target.closest('[data-edit]'),dlb=e.target.closest('[data-del]'),
         sd=e.target.closest('[data-send]'),op=e.target.closest('[data-open]'),df=e.target.closest('[data-delfile]'),
         ce=e.target.closest('[data-cedit]'),cw=e.target.closest('[data-cwa]'),ct=e.target.closest('[data-ctel]');
-  if(t){const v=visits.find(x=>x.id===t.dataset.toggle);v.reqStatus=v.reqStatus==='open'?'done':'open';await kv.set(K_V,visits);render()}
+  if(t){const v=visits.find(x=>x.id===t.dataset.toggle);v.reqStatus=v.reqStatus==='open'?'done':'open';await saveVisit(v);render()}
   if(ed)openVisit(visits.find(x=>x.id===ed.dataset.edit));
   if(sd)openSend(sd.dataset.send);
-  if(dlb&&confirm('למחוק את הביקור?')){visits=visits.filter(x=>x.id!==dlb.dataset.del);await kv.set(K_V,visits);render();toast('הביקור נמחק')}
+  if(dlb&&confirm('למחוק את הביקור?')){await removeVisit(dlb.dataset.del);visits=visits.filter(x=>x.id!==dlb.dataset.del);render();toast('הביקור נמחק')}
   if(op){const d=docs.find(x=>x.id===op.dataset.open),u=URL.createObjectURL(d.blob),a=document.createElement('a');a.href=u;a.target='_blank';a.download=d.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),4000)}
   if(df&&confirm('למחוק את המסמך?')){await files.del(df.dataset.delfile);docs=docs.filter(x=>x.id!==df.dataset.delfile);render()}
   if(ce)openContact(ce.dataset.cedit);
@@ -1105,22 +1158,68 @@ document.getElementById('bkFile').onchange=e=>{
       const d=JSON.parse(r.result),arr=Array.isArray(d)?d:d.visits;
       if(!Array.isArray(arr))throw 0;
       const ids=new Set(visits.map(v=>v.id));
-      visits=visits.concat(arr.filter(v=>!ids.has(v.id)));
+      const add=arr.filter(v=>!ids.has(v.id));
       if(d.contacts)contacts={...d.contacts,...contacts};
       if(d.settings&&!settings.phone)settings=d.settings;
-      await kv.set(K_V,visits);await kv.set(K_C,contacts);await kv.set(K_S,settings);
-      render();toast(`שוחזרו ${arr.length} ביקורים`);
+      await saveMany(add);await saveContacts();await saveSettings();
+      render();toast(`שוחזרו ${add.length} ביקורים`);
     }catch(err){toast('הקובץ לא תקין — צריך קובץ גיבוי מהמערכת')}
   };
   r.readAsText(f);e.target.value='';
 };
 
-/* ============== init ============== */
-(async()=>{
-  visits=await kv.get(K_V,[]);contacts=await kv.get(K_C,{});settings=await kv.get(K_S,{name:'',phone:'',mail:''});
-  try{docs=await files.all()||[]}catch(e){files.ok=false;docs=[]}
-  render();
-})();
+/* ============== auth + live sync ============== */
+const gate=document.getElementById('gate'),gErr=document.getElementById('gErr');
+const gerr=m=>{gErr.textContent=m;gErr.classList.add('show')};
+document.getElementById('gEye').onclick=()=>{
+  const i=document.getElementById('gPass');
+  const showing=i.type==='text';i.type=showing?'password':'text';
+  document.getElementById('gEye').textContent=showing?'הצגה':'הסתרה';
+};
+async function doLogin(){
+  const u=document.getElementById('gUser').value.trim(),p=document.getElementById('gPass').value;
+  if(!u||!p)return gerr('צריך למלא שם משתמש וסיסמה');
+  gErr.classList.remove('show');
+  const btn=document.getElementById('gGo');btn.textContent='מתחבר…';btn.disabled=true;
+  try{
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    await auth.signInWithEmailAndPassword(u,p);
+  }catch(e){
+    const c=e.code||'';
+    gerr(c.includes('password')||c.includes('credential')||c.includes('user-not-found')?'שם משתמש או סיסמה שגויים':
+         c.includes('network')?'אין חיבור לאינטרנט':
+         c.includes('too-many')?'יותר מדי ניסיונות — נסי שוב בעוד כמה דקות':'ההתחברות נכשלה');
+  }
+  btn.textContent='כניסה';btn.disabled=false;
+}
+document.getElementById('gGo').onclick=doLogin;
+document.getElementById('gPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+function startSync(){
+  unsub.push(COL_V().onSnapshot(snap=>{
+    visits=snap.docs.map(d=>({id:d.id,...d.data()}));
+    setDot(!snap.metadata.fromCache);
+    render();
+  },err=>{console.error(err);toast('אין גישה לנתונים — בדוק את כללי האבטחה')}));
+  unsub.push(DOC_C().onSnapshot(d=>{contacts=(d.data()||{}).map||{};render()},()=>{}));
+  db.doc('users/'+uid).get().then(d=>{if(d.exists){settings=d.data();render()}}).catch(()=>{});
+}
+auth.onAuthStateChanged(async user=>{
+  if(user){
+    uid=user.uid;uname=(user.email||'').split('@')[0];
+    gate.classList.add('hide');
+    document.getElementById('whoNote').textContent='מחוברת כ: '+(user.email||'');
+    try{docs=await files.all()||[]}catch(e){files.ok=false;docs=[]}
+    startSync();render();
+  }else{
+    unsub.forEach(f=>{try{f()}catch(e){}});unsub=[];
+    visits=[];contacts={};settings={name:'',phone:'',mail:''};uid='';
+    gate.classList.remove('hide');
+    document.getElementById('gPass').value='';
+  }
+});
+window.addEventListener('online',()=>setDot(true));
+window.addEventListener('offline',()=>setDot(false));
 </script>
 </body>
 </html>
