@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ביקורי מרפאות שיניים · TARO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Assistant:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--deep:#0D3B37;--teal:#16706A;--mint:#E4EFEB;--paper:#FBFCFB;--amber:#F2A93B;--ink:#0A1F1D;--muted:#6B807C;--line:#D8E4E0;--danger:#C0553F;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:"Assistant",-apple-system,system-ui,sans-serif;font-size:16px;line-height:1.5;padding-bottom:96px}
+h1,h2,h3,.num{font-family:"Heebo",sans-serif}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.hide{display:none!important}
+
+.top{background:var(--deep);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:30;box-shadow:0 2px 14px rgba(13,59,55,.18)}
+.brandrow{display:flex;justify-content:space-between;align-items:flex-start}
+.eyebrow{font-family:"Heebo";font-weight:700;font-size:11px;letter-spacing:.22em;color:#7FBDB4;margin:0 0 2px}
+.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.01em}
+.gear{font-size:12px;font-weight:600;color:#7FBDB4;border:1px solid rgba(127,189,180,.4);border-radius:20px;padding:5px 11px}
+.seg{display:flex;gap:4px;background:rgba(255,255,255,.10);border-radius:11px;padding:3px;margin-top:12px}
+.seg button{flex:1;padding:8px 0;border-radius:9px;font-family:"Heebo";font-weight:700;font-size:14px;color:#CFE4E0;transition:.15s}
+.seg button.on{background:#fff;color:var(--deep)}
+.seg.sub{margin-top:8px;background:rgba(255,255,255,.06)}
+.seg.sub button{font-size:12.5px;padding:6px 0}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px}
+.nav .range{font-family:"Heebo";font-weight:700;font-size:15px;flex:1;text-align:center}
+.nav .arrow{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);font-size:18px;line-height:1;display:grid;place-items:center}
+.today{font-size:12px;font-weight:600;color:#7FBDB4;padding:4px 8px;border:1px solid rgba(127,189,180,.4);border-radius:20px}
+
+.strip{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 10px;background:#fff;border-bottom:1px solid var(--line);scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.cell{flex:0 0 auto;min-width:40px;text-align:center;padding:6px 4px 5px;border-radius:10px;background:var(--paper);border:1px solid var(--line)}
+.cell.sel{background:var(--deep);border-color:var(--deep);color:#fff}
+.cell .dow{font-size:10px;color:var(--muted);font-weight:600}
+.cell.sel .dow{color:#9CCFC7}
+.cell .dnum{font-family:"Heebo";font-weight:700;font-size:15px;line-height:1.2}
+.bar{height:3px;border-radius:2px;background:var(--line);margin-top:4px}
+.bar.has{background:var(--amber)}
+
+.calwrap{background:#fff;border-bottom:1px solid var(--line);padding:12px 16px 14px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .hd{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding-bottom:2px}
+.day{min-height:52px;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:4px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.day.mute{opacity:.3}
+.day.now{border-color:var(--teal);border-width:2px}
+.day.sel{background:var(--deep);border-color:var(--deep);color:#fff}
+.day .n{font-family:"Heebo";font-weight:700;font-size:14px;line-height:1.1}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.dot.open{background:var(--amber)}
+.plus{font-size:10px;font-weight:700;color:var(--muted)}
+.day.sel .plus{color:#9CCFC7}
+.dayhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 6px}
+.dayhead h3{margin:0;font-size:15px;font-weight:700}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 16px 4px}
+.stats.four{grid-template-columns:repeat(2,1fr)}
+.tile{background:var(--mint);border-radius:var(--r);padding:10px 12px}
+.tile .n{font-family:"Heebo";font-weight:900;font-size:24px;line-height:1;color:var(--deep)}
+.tile .l{font-size:12px;color:var(--muted);margin-top:3px}
+.tile.alert{background:#FCEFD9}
+.tile.alert .n{color:#A9701A}
+
+.tabs{display:flex;gap:11px;justify-content:space-between;padding:14px 16px 0;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{white-space:nowrap;padding-bottom:9px;font-family:"Heebo";font-weight:700;font-size:14px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--deep);border-color:var(--teal)}
+.badge{display:inline-block;min-width:19px;padding:0 5px;margin-inline-start:5px;background:var(--amber);color:#3D2A05;border-radius:10px;font-size:12px;font-weight:700;line-height:19px}
+
+.list{padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px;border-inline-start:4px solid var(--teal)}
+.card.open{border-inline-start-color:var(--amber)}
+.chead{display:flex;gap:10px;align-items:flex-start}
+.datechip{flex:0 0 auto;text-align:center;background:var(--mint);border-radius:10px;padding:6px 8px;min-width:50px}
+.datechip .d{font-family:"Heebo";font-weight:900;font-size:19px;line-height:1;color:var(--deep)}
+.datechip .m{font-size:11px;color:var(--muted)}
+.cbody{flex:1;min-width:0}
+.clinic{font-family:"Heebo";font-weight:700;font-size:16px;margin:0}
+.person{font-size:13.5px;color:var(--muted);margin-top:2px}
+.notes{margin-top:9px;font-size:14.5px;white-space:pre-wrap;border-top:1px dashed var(--line);padding-top:8px}
+.req{margin-top:9px;background:#FCEFD9;border-radius:10px;padding:9px 10px;font-size:14px}
+.req .rt{font-family:"Heebo";font-weight:700;font-size:11px;letter-spacing:.1em;color:#A9701A;display:block;margin-bottom:2px}
+.req.done{background:var(--mint);opacity:.75}
+.req.done .rt{color:var(--teal)}
+.req.done .rtext{text-decoration:line-through}
+.rowbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mini{font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:#fff}
+.mini.solid{background:var(--deep);color:#fff;border-color:var(--deep)}
+.mini.warn{color:var(--danger);border-color:#EBC9C0}
+.next{margin-top:8px;font-size:12.5px;color:var(--teal);font-weight:600}
+.empty{text-align:center;padding:34px 24px;color:var(--muted)}
+.empty b{display:block;font-family:"Heebo";font-size:16px;color:var(--ink);margin-bottom:4px}
+
+.doc{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px;margin-bottom:8px}
+.thumb{width:48px;height:48px;border-radius:9px;flex:0 0 auto;background:var(--mint);display:grid;place-items:center;font-family:"Heebo";font-weight:700;font-size:11px;color:var(--teal);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.dinfo{flex:1;min-width:0}
+.dinfo b{display:block;font-family:"Heebo";font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dinfo span{font-size:12px;color:var(--muted)}
+.noph{color:var(--danger);font-weight:600}
+
+.sum{padding:4px 16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.panel h3{margin:0 0 12px;font-size:13px;letter-spacing:.1em;color:var(--muted);font-weight:700}
+.chart{display:flex;align-items:flex-end;gap:5px;height:118px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.colbar{width:100%;background:var(--teal);border-radius:6px 6px 0 0;min-height:3px}
+.colbar.zero{background:var(--line)}
+.colval{font-family:"Heebo";font-weight:700;font-size:12px;color:var(--deep)}
+.collab{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:right;font-size:11.5px;color:var(--muted);font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--line)}
+td{padding:8px 0;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:center;width:52px;font-family:"Heebo";font-weight:700}
+.pill{display:inline-block;background:var(--mint);border-radius:20px;padding:2px 10px;font-size:12.5px;margin:0 0 6px 6px}
+.pill b{font-family:"Heebo"}
+.warnbox{background:#FCEFD9;border-radius:12px;padding:11px 12px;font-size:13.5px;line-height:1.6}
+
+.actions{padding:8px 16px 20px}
+.actions h3{font-size:12px;letter-spacing:.14em;color:var(--muted);margin:16px 0 8px;font-weight:700}
+.arow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.abtn{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-weight:600;font-size:14px;text-align:center}
+.abtn.pri{background:var(--teal);color:#fff;border-color:var(--teal)}
+.abtn.dark{background:var(--deep);color:#fff;border-color:var(--deep)}
+.hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+
+.fab{position:fixed;inset-block-end:20px;inset-inline-start:16px;z-index:40;background:var(--deep);color:#fff;border-radius:30px;padding:14px 20px;font-family:"Heebo";font-weight:700;font-size:15px;box-shadow:0 8px 22px rgba(13,59,55,.35)}
+.scrim{position:fixed;inset:0;background:rgba(10,31,29,.5);z-index:50;display:none}
+.scrim.show{display:block}
+.sheet{position:fixed;inset-inline:0;inset-block-end:0;max-height:92vh;overflow-y:auto;background:var(--paper);border-radius:20px 20px 0 0;z-index:60;transform:translateY(102%);transition:transform .25s ease;padding:0 16px 28px}
+.sheet.show{transform:translateY(0)}
+.shead{position:sticky;top:0;background:var(--paper);padding:14px 0 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);margin-bottom:14px;z-index:2}
+.shead h2{margin:0;font-size:18px;font-weight:900}
+.f{margin-bottom:12px}
+.f label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+textarea{min-height:82px;resize:vertical}
+.filebtn{display:block;width:100%;text-align:center;border:1px dashed var(--teal);border-radius:12px;padding:13px;color:var(--teal);font-weight:600;font-size:14px;background:#fff}
+.pending{font-size:13px;color:var(--muted);margin-top:6px}
+.save{width:100%;background:var(--deep);color:#fff;padding:15px;border-radius:12px;font-family:"Heebo";font-weight:700;font-size:16px;margin-top:6px}
+.save.teal{background:var(--teal)}
+.pickbtn{display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:right;font-size:16px}
+.pickbtn .chev{color:var(--teal);font-weight:600;font-size:13px;flex:0 0 auto}
+.pickbtn.empty-val #fClinicTxt{color:var(--muted)}
+.sheet.pick{z-index:70;max-height:88vh}
+.newrow{border-color:var(--teal)!important;color:var(--teal);font-weight:600}
+.vlist{margin-top:10px}
+.vlist button{display:block;width:100%;text-align:right;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px;font-size:14px}
+.vlist b{font-family:"Heebo"}
+.toast{position:fixed;inset-block-end:84px;inset-inline:16px;background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;text-align:center;z-index:80;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;font-size:14px}
+.toast.show{opacity:1;transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(min-width:680px){body{max-width:660px;margin:0 auto;border-inline:1px solid var(--line)}.sheet{max-width:660px;margin:0 auto}.day{min-height:64px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brandrow">
+    <div><p class="eyebrow">TARO · שטח</p><h1>ביקורי מרפאות שיניים</h1></div>
+    <button class="gear" id="openSettings">הגדרות</button>
+  </div>
+  <div class="seg" id="seg">
+    <button data-view="day">יום</button>
+    <button data-view="week" class="on">שבוע</button>
+    <button data-view="month">חודש</button>
+    <button data-view="sum">סיכום</button>
+  </div>
+  <div class="seg sub hide" id="segSum">
+    <button data-sum="month" class="on">חודשי</button>
+    <button data-sum="quarter">רבעוני</button>
+    <button data-sum="half">חציוני</button>
+    <button data-sum="year">שנתי</button>
+  </div>
+  <div class="nav">
+    <button class="arrow" id="prev" aria-label="תקופה קודמת">›</button>
+    <span class="range" id="range"></span>
+    <button class="arrow" id="next" aria-label="תקופה הבאה">‹</button>
+    <button class="today" id="today">היום</button>
+  </div>
+</header>
+
+<div class="strip" id="strip"></div>
+<div class="calwrap hide" id="calwrap"><div class="cal" id="calHead"></div><div class="cal" id="cal"></div></div>
+<div class="dayhead hide" id="dayhead"><h3 id="dayTitle"></h3><button class="mini solid" id="addDay">+ ביקור בתאריך זה</button></div>
+
+<div class="stats" id="stats"></div>
+
+<div class="tabs" id="tabs">
+  <button data-tab="visits" class="on">ביקורים</button>
+  <button data-tab="reqs">בקשות<span class="badge" id="reqBadge">0</span></button>
+  <button data-tab="docs">מסמכים</button>
+  <button data-tab="contacts">אנשי קשר</button>
+</div>
+
+<main class="list" id="list"></main>
+<section class="sum hide" id="sumView"></section>
+
+<section class="actions">
+  <h3>דוחות ושליחה</h3>
+  <div class="arow">
+    <button class="abtn pri" id="openExport">דוח אקסל לפי תקופה</button>
+    <button class="abtn dark" id="openSend">שליחת הודעה</button>
+  </div>
+  <div class="arow" style="margin-top:8px">
+    <button class="abtn" id="xlsxQuick">אקסל לתקופה המוצגת</button>
+    <button class="abtn" id="waQuick">וואטסאפ מהיר למשרד</button>
+  </div>
+  <h3>מרפאות ואנשי קשר</h3>
+  <div class="arow">
+    <button class="abtn pri" id="impOpen2">ייבוא רשימת מרפאות מקובץ</button>
+    <button class="abtn" id="goContacts">רשימת המרפאות</button>
+  </div>
+  <h3>גיבוי</h3>
+  <div class="arow">
+    <button class="abtn" id="bkOut">שמירת גיבוי</button>
+    <button class="abtn" id="bkIn">שחזור מגיבוי</button>
+  </div>
+  <input type="file" id="bkFile" accept="application/json" hidden>
+  <p class="hint">הביקורים, אנשי הקשר והמסמכים נשמרים במכשיר הזה בלבד. הגיבוי כולל ביקורים ואנשי קשר — לא קבצים.</p>
+</section>
+
+<button class="fab" id="add">+ ביקור חדש</button>
+<div class="scrim" id="scrim"></div>
+
+<!-- ביקור -->
+<section class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2 id="sheetTitle">ביקור חדש</h2><button class="mini" data-close>סגירה</button></div>
+  <div class="f"><label for="fDate">תאריך הביקור</label><input type="date" id="fDate"></div>
+  <div class="f"><label for="fClinic">שם הרופא / המרפאה</label>
+    <button class="pickbtn empty-val" id="fClinicBtn"><span id="fClinicTxt">בחירה או הוספה של מרפאה</span><span class="chev">בחירה ›</span></button>
+    <input id="fClinic" type="hidden"><datalist id="clinics"></datalist>
+    <div class="pending" id="fClinicMeta"></div>
+  </div>
+  <div class="f2">
+    <div class="f"><label for="fStaff">איש הצוות שנפגש</label><input id="fStaff" list="staff" placeholder="שם מלא" autocomplete="off"><datalist id="staff"></datalist></div>
+    <div class="f"><label for="fRole">תפקיד</label><select id="fRole"><option>רופא/ה</option><option>סייעת</option><option>מנהל/ת מרפאה</option><option>קבלה</option><option>אחר</option></select></div>
+  </div>
+  <div class="f"><label for="fNotes">הערות ודגשים</label><textarea id="fNotes" placeholder="מה נמסר, תגובות, מתחרים, הזדמנויות"></textarea></div>
+  <div class="f"><label for="fReq">בקשה / דרישה למשרד תרו</label><textarea id="fReq" placeholder="חומרי הדרכה, דוגמיות, הצעת מחיר, חשבונית"></textarea></div>
+  <div class="f2">
+    <div class="f"><label for="fPri">דחיפות הבקשה</label><select id="fPri"><option>רגיל</option><option>דחוף</option></select></div>
+    <div class="f"><label for="fNext">ביקור הבא</label><input type="date" id="fNext"></div>
+  </div>
+  <div class="f"><label>פרטי קשר של המרפאה</label>
+    <button class="filebtn" id="vPick">שליפה מאנשי הקשר בנייד</button>
+    <div class="f2" style="margin-top:10px">
+      <div class="f" style="margin:0"><input id="vPhone" type="tel" placeholder="טלפון"></div>
+      <div class="f" style="margin:0"><input id="vMail" type="email" placeholder="מייל"></div>
+    </div>
+  </div>
+  <div class="f"><label>מסמכים לביקור</label>
+    <button class="filebtn" id="pickFiles">צילום או בחירת קבצים · מרשם, אקסל, PDF</button>
+    <input type="file" id="fFiles" multiple hidden>
+    <div class="pending" id="pendingList"></div>
+  </div>
+  <button class="save" id="save">שמירת הביקור</button>
+</section>
+
+<!-- איש קשר -->
+<section class="sheet" id="cSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2 id="cTitle">איש קשר</h2><button class="mini" data-close>סגירה</button></div>
+  <button class="filebtn" id="cPick">שליפה מאנשי הקשר בנייד</button>
+  <button class="filebtn" id="cVcfBtn" style="margin-top:8px">ייבוא מכרטיס vCard ‎(.vcf)</button>
+  <input type="file" id="cVcf" accept=".vcf,text/vcard" hidden>
+  <div class="vlist" id="cResults"></div>
+  <div class="f" style="margin-top:14px"><label for="cName">שם המרפאה / הרופא</label><input id="cName" list="clinics" placeholder="מרפאת שיניים · ד״ר לוי" autocomplete="off"></div>
+  <div class="f"><label for="cPerson">איש קשר</label><input id="cPerson" placeholder="ד״ר לוי / מזכירות"></div>
+  <div class="f"><label for="cPhone">טלפון נייד</label><input id="cPhone" type="tel" placeholder="05X-XXXXXXX"></div>
+  <div class="f"><label for="cMail">מייל</label><input id="cMail" type="email" placeholder="clinic@mail.com"></div>
+  <div class="f"><label for="cCity">עיר / כתובת</label><input id="cCity" placeholder="תל אביב"></div>
+  <button class="save" id="cSave">שמירת פרטי הקשר</button>
+</section>
+
+<!-- דוח לפי תקופה -->
+<section class="sheet" id="expSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2>דוח לפי תקופה</h2><button class="mini" data-close>סגירה</button></div>
+  <div class="f"><label for="eType">סוג התקופה</label>
+    <select id="eType"><option value="month">חודש</option><option value="quarter">רבעון</option><option value="half">חציון</option><option value="year">שנה</option><option value="custom">טווח מותאם</option></select>
+  </div>
+  <div class="f2" id="eStd">
+    <div class="f"><label for="eYear">שנה</label><select id="eYear"></select></div>
+    <div class="f" id="eSubWrap"><label for="eSub">תקופה</label><select id="eSub"></select></div>
+  </div>
+  <div class="f2 hide" id="eCustom">
+    <div class="f"><label for="eFrom">מתאריך</label><input type="date" id="eFrom"></div>
+    <div class="f"><label for="eTo">עד תאריך</label><input type="date" id="eTo"></div>
+  </div>
+  <div class="warnbox" id="ePreview">—</div>
+  <button class="save" id="eXlsx" style="margin-top:14px">הורדת קובץ אקסל</button>
+  <button class="save teal" id="eWa" style="margin-top:8px">שליחת הסיכום בוואטסאפ</button>
+</section>
+
+<!-- שליחת הודעה -->
+<section class="sheet" id="sendSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2>שליחת הודעה</h2><button class="mini" data-close>סגירה</button></div>
+  <div class="f"><label for="sTo">אל</label><select id="sTo"><option value="clinic">מרפאה / רופא</option><option value="office">משרד תרו</option></select></div>
+  <div id="sClinicBox">
+    <div class="f"><label for="sClinic">בחירת מרפאה</label><select id="sClinic"></select></div>
+    <button class="filebtn" id="sPick">שליפה מאנשי הקשר בנייד</button>
+    <div class="f2" style="margin-top:10px">
+      <div class="f"><label for="sPhone">טלפון</label><input id="sPhone" type="tel" placeholder="05X-XXXXXXX"></div>
+      <div class="f"><label for="sEmail">מייל</label><input id="sEmail" type="email" placeholder="clinic@mail.com"></div>
+    </div>
+  </div>
+  <div class="f"><label for="sTpl">תבנית</label>
+    <select id="sTpl">
+      <option value="thanks">תודה אחרי ביקור</option>
+      <option value="followup">תזכורת לביקור הבא</option>
+      <option value="summary">סיכום התקופה המוצגת</option>
+      <option value="reqs">בקשות פתוחות למשרד</option>
+      <option value="free">הודעה חופשית</option>
+    </select>
+  </div>
+  <div class="f"><label for="sSubj">נושא (למייל)</label><input id="sSubj"></div>
+  <div class="f"><label for="sBody">תוכן ההודעה</label><textarea id="sBody" style="min-height:170px"></textarea></div>
+  <div class="arow">
+    <button class="save teal" id="sWa" style="margin:0">וואטסאפ</button>
+    <button class="save" id="sMail" style="margin:0">מייל</button>
+  </div>
+  <p class="hint">קבצים מצורפים לא נשלחים אוטומטית — צריך לצרף אותם אחרי פתיחת ההודעה.</p>
+</section>
+
+<!-- בחירת מרפאה -->
+<section class="sheet pick" id="pickSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2>בחירת מרפאה</h2><button class="mini" id="pkClose">סגירה</button></div>
+  <input id="pkQ" placeholder="חיפוש או הקלדת שם חדש" autocomplete="off">
+  <div class="vlist" id="pkList" style="margin-top:12px"></div>
+</section>
+
+<!-- ייבוא אנשי קשר -->
+<section class="sheet" id="impSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2>ייבוא אנשי קשר מקובץ</h2><button class="mini" data-close>סגירה</button></div>
+  <button class="filebtn" id="impPick">בחירת קובץ · Excel, CSV או vCard</button>
+  <button class="filebtn" id="impTpl" style="margin-top:8px">הורדת קובץ תבנית למילוי</button>
+  <input type="file" id="impFile" accept=".xlsx,.xls,.csv,.vcf,text/csv,text/vcard" hidden>
+  <div id="impMap" class="hide" style="margin-top:14px">
+    <p class="hint" style="margin-top:0">התאמת העמודות בקובץ לשדות במערכת (השורה הראשונה בקובץ נחשבת לכותרות):</p>
+    <div class="f"><label for="mClinic">שם המרפאה / הרופא · חובה</label><select id="mClinic"></select></div>
+    <div class="f2">
+      <div class="f"><label for="mPerson">איש קשר</label><select id="mPerson"></select></div>
+      <div class="f"><label for="mPhone">טלפון</label><select id="mPhone"></select></div>
+    </div>
+    <div class="f2">
+      <div class="f"><label for="mMail">מייל</label><select id="mMail"></select></div>
+      <div class="f"><label for="mCity">עיר / כתובת</label><select id="mCity"></select></div>
+    </div>
+    <div class="f"><label for="mPolicy">אם המרפאה כבר קיימת</label>
+      <select id="mPolicy"><option value="keep">להשלים רק שדות ריקים</option><option value="over">לדרוס בערכים מהקובץ</option></select></div>
+  </div>
+  <div class="warnbox" id="impPreview" style="margin-top:14px">עדיין לא נבחר קובץ.</div>
+  <button class="save hide" id="impGo" style="margin-top:14px">ייבוא אנשי הקשר</button>
+</section>
+
+<!-- הגדרות -->
+<section class="sheet" id="setSheet" role="dialog" aria-modal="true">
+  <div class="shead"><h2>הגדרות</h2><button class="mini" data-close>סגירה</button></div>
+  <div class="f"><label for="gName">שם התועמלנית</label><input id="gName" placeholder="לחתימה בהודעות"></div>
+  <div class="f"><label for="gPhone">וואטסאפ של המשרד בתרו</label><input id="gPhone" type="tel" placeholder="05X-XXXXXXX"></div>
+  <div class="f"><label for="gMail">מייל המשרד בתרו</label><input id="gMail" type="email" placeholder="office@taro.co.il"></div>
+  <button class="save" id="gSave">שמירת ההגדרות</button>
+  <button class="save teal" id="vcfOut" style="margin-top:8px">ייצוא אנשי הקשר לכרטיסי vCard</button>
+  <p class="hint" id="pickNote"></p>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============== key-value storage ============== */
+const kv={
+  async get(k,def){
+    if(window.storage){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):def}catch(e){return def}}
+    try{const raw=localStorage.getItem(k);return raw?JSON.parse(raw):def}catch(e){return def}
+  },
+  async set(k,v){
+    if(window.storage){try{await window.storage.set(k,JSON.stringify(v))}catch(e){}return}
+    try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('השמירה נכשלה — אין מקום פנוי')}
+  }
+};
+const K_V='taro_dental_visits_v1',K_C='taro_dental_contacts_v1',K_S='taro_dental_settings_v1';
+
+/* ============== file storage ============== */
+const files={
+  ok:true,_p:null,
+  open(){
+    if(this._p)return this._p;
+    this._p=new Promise((res,rej)=>{
+      try{
+        const r=indexedDB.open('taro_dental_files',1);
+        r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('f'))r.result.createObjectStore('f',{keyPath:'id'})};
+        r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+      }catch(e){rej(e)}
+    }).catch(e=>{files.ok=false;throw e});
+    return this._p;
+  },
+  async tx(mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction('f',mode),s=t.objectStore('f');const rq=fn(s);t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error)})},
+  put(rec){return this.tx('readwrite',s=>s.put(rec))},
+  all(){return this.tx('readonly',s=>s.getAll())},
+  del(id){return this.tx('readwrite',s=>s.delete(id))}
+};
+async function compress(file){
+  if(!/^image\//.test(file.type))return file;
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(file)});
+    const max=1400,sc=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');c.width=img.width*sc;c.height=img.height*sc;
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.72));
+    URL.revokeObjectURL(img.src);
+    return blob&&blob.size<file.size?new File([blob],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):file;
+  }catch(e){return file}
+}
+
+/* ============== phone contacts ============== */
+const canPick=('contacts'in navigator)&&('ContactsManager'in window);
+async function pickFromPhone(){
+  if(!canPick){toast('שליפה מאנשי הקשר נתמכת בכרום באנדרואיד, באתר מאובטח — אפשר לייבא קובץ vCard במקום');return null}
+  try{
+    let props=['name','tel','email'];
+    if(navigator.contacts.getProperties){const av=await navigator.contacts.getProperties();props=props.filter(p=>av.includes(p))}
+    const res=await navigator.contacts.select(props,{multiple:false});
+    if(!res||!res.length)return null;
+    const c=res[0];
+    return{name:(c.name&&c.name[0])||'',phone:(c.tel&&c.tel[0])||'',mail:(c.email&&c.email[0])||''};
+  }catch(e){toast('לא ניתן לפתוח את אנשי הקשר בסביבה הזו');return null}
+}
+function parseVcf(text){
+  return text.split(/BEGIN:VCARD/i).slice(1).map(b=>{
+    const g=re=>{const m=b.match(re);return m?m[1].trim().replace(/\r/g,''):''};
+    return{name:g(/[\r\n]FN[^:\r\n]*:([^\r\n]+)/i),phone:g(/[\r\n]TEL[^:\r\n]*:([^\r\n]+)/i),mail:g(/[\r\n]EMAIL[^:\r\n]*:([^\r\n]+)/i)};
+  }).filter(c=>c.name||c.phone);
+}
+function vcfAll(){
+  return Object.entries(contacts).filter(([,c])=>c.phone||c.mail).map(([k,c])=>
+`BEGIN:VCARD
+VERSION:3.0
+FN:${c.name||k}
+ORG:${k}
+${c.phone?'TEL;TYPE=CELL:'+c.phone+'\n':''}${c.mail?'EMAIL:'+c.mail+'\n':''}${c.city?'ADR;TYPE=WORK:;;'+c.city+';;;;\n':''}END:VCARD`).join('\n');
+}
+
+/* ============== state ============== */
+let visits=[],docs=[],contacts={},settings={name:'',phone:'',mail:''};
+let view='week',sumMode='month',anchor=new Date(),selDay=null,tab='visits',editId=null,pending=[],cKey='';
+const HE_M=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const HE_S=['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
+const HE_D=['א','ב','ג','ד','ה','ו','ש'];
+
+/* ============== dates ============== */
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const startWeek=d=>{const x=new Date(d);x.setDate(x.getDate()-x.getDay());x.setHours(0,0,0,0);return x};
+const fmt=s=>s?s.split('-').reverse().join('/'):'';
+function rangeOf(mode,a){
+  a=new Date(a);a.setHours(0,0,0,0);
+  if(mode==='day')return[a,a];
+  if(mode==='week'){const s=startWeek(a),e=new Date(s);e.setDate(s.getDate()+6);return[s,e]}
+  if(mode==='month')return[new Date(a.getFullYear(),a.getMonth(),1),new Date(a.getFullYear(),a.getMonth()+1,0)];
+  if(mode==='quarter'){const q=Math.floor(a.getMonth()/3);return[new Date(a.getFullYear(),q*3,1),new Date(a.getFullYear(),q*3+3,0)]}
+  if(mode==='half'){const h=a.getMonth()<6?0:1;return[new Date(a.getFullYear(),h*6,1),new Date(a.getFullYear(),h*6+6,0)]}
+  return[new Date(a.getFullYear(),0,1),new Date(a.getFullYear(),11,31)];
+}
+function labelOf(mode,a){
+  const[s,e]=rangeOf(mode,a);
+  if(mode==='day')return`יום ${HE_D[s.getDay()]}׳, ${s.getDate()} ב${HE_M[s.getMonth()]}`;
+  if(mode==='week')return`${s.getDate()}–${e.getDate()} ב${HE_M[e.getMonth()]} ${e.getFullYear()}`;
+  if(mode==='month')return`${HE_M[s.getMonth()]} ${s.getFullYear()}`;
+  if(mode==='quarter')return`רבעון ${Math.floor(s.getMonth()/3)+1} · ${s.getFullYear()}`;
+  if(mode==='half')return`חציון ${s.getMonth()<6?1:2} · ${s.getFullYear()}`;
+  return`שנת ${s.getFullYear()}`;
+}
+const curMode=()=>view==='sum'?sumMode:view;
+const period=()=>rangeOf(curMode(),anchor);
+const periodLabel=()=>labelOf(curMode(),anchor);
+function shift(dir){
+  const a=new Date(anchor),m=curMode();
+  if(m==='day')a.setDate(a.getDate()+dir);
+  else if(m==='week')a.setDate(a.getDate()+7*dir);
+  else if(m==='month')a.setMonth(a.getMonth()+dir);
+  else if(m==='quarter')a.setMonth(a.getMonth()+3*dir);
+  else if(m==='half')a.setMonth(a.getMonth()+6*dir);
+  else a.setFullYear(a.getFullYear()+dir);
+  anchor=a;selDay=null;render();
+}
+const between=(v,s,e)=>{const d=parse(v.date);return d>=s&&d<=e};
+const inPeriod=v=>{const[s,e]=period();return between(v,s,e)};
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const emptyBox=(t,s)=>`<div class="empty"><b>${t}</b>${s}</div>`;
+const kb=n=>n<1024?n+' ב׳':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(1)+' MB';
+const waNum=p=>{let d=(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='972'+d.slice(1);else if(!d.startsWith('972')&&d.length===9)d='972'+d;return d};
+
+/* ============== render ============== */
+function render(){
+  document.getElementById('range').textContent=periodLabel();
+  document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
+  document.querySelectorAll('#segSum button').forEach(b=>b.classList.toggle('on',b.dataset.sum===sumMode));
+  const isSum=view==='sum',isMonth=view==='month';
+  document.getElementById('segSum').classList.toggle('hide',!isSum);
+  document.getElementById('strip').classList.toggle('hide',isSum||isMonth);
+  document.getElementById('calwrap').classList.toggle('hide',!isMonth);
+  document.getElementById('dayhead').classList.toggle('hide',!(isMonth&&selDay&&tab==='visits'));
+  document.getElementById('tabs').classList.toggle('hide',isSum);
+  document.getElementById('stats').classList.toggle('hide',isSum);
+  document.getElementById('list').classList.toggle('hide',isSum);
+  document.getElementById('sumView').classList.toggle('hide',!isSum);
+  document.getElementById('add').classList.toggle('hide',isSum);
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  fillDatalists();
+  if(isSum){drawSummary();return}
+  if(isMonth)drawCalendar();else drawStrip();
+  drawStats();drawList();
+}
+function drawStats(){
+  const rows=visits.filter(inPeriod),open=visits.filter(v=>v.req&&v.reqStatus==='open');
+  document.getElementById('stats').innerHTML=`
+    <div class="tile"><div class="n num">${rows.length}</div><div class="l">ביקורים</div></div>
+    <div class="tile"><div class="n num">${new Set(rows.map(r=>r.clinic)).size}</div><div class="l">מרפאות</div></div>
+    <div class="tile alert"><div class="n num">${open.length}</div><div class="l">בקשות פתוחות</div></div>`;
+  document.getElementById('reqBadge').textContent=open.length;
+}
+const clinicNames=()=>[...new Set([...visits.map(v=>v.clinic),...Object.keys(contacts)])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'he'));
+function drawList(){
+  const list=document.getElementById('list');
+  if(tab==='contacts'){
+    const names=clinicNames();
+    list.innerHTML='<div class="arow" style="margin-bottom:12px"><button class="filebtn" id="addClinic">+ הוספת מרפאה</button><button class="filebtn" id="impOpen">ייבוא מקובץ</button></div>'+
+      (names.length?names.map(contactRow).join(''):emptyBox('אין עדיין מרפאות','אפשר לייבא רשימה שלמה מקובץ, או לשמור טלפון אחרי הביקור הראשון.'));
+    document.getElementById('impOpen').onclick=()=>openS('impSheet');
+    document.getElementById('addClinic').onclick=()=>openContact('');
+    return;
+  }
+  if(tab==='docs'){
+    const items=docs.slice().sort((a,b)=>b.added-a.added);
+    list.innerHTML=`<button class="filebtn" id="pickGeneral" style="margin-bottom:12px">העלאת מסמך כללי</button>`+
+      (files.ok?'':`<div class="warnbox" style="margin-bottom:12px">אחסון הקבצים לא זמין בסביבה הזו. יש לפתוח את הקובץ ישירות בדפדפן במכשיר.</div>`)+
+      (items.length?items.map(docRow).join(''):emptyBox('אין מסמכים','מרשמים, טפסים וקבצי אקסל שיועלו יישמרו כאן.'));
+    document.getElementById('pickGeneral').onclick=()=>{pendingTarget=null;document.getElementById('fFiles').click()};
+    return;
+  }
+  if(tab==='reqs'){
+    const all=visits.filter(v=>v.req).sort((a,b)=>a.reqStatus===b.reqStatus?b.date.localeCompare(a.date):a.reqStatus==='open'?-1:1);
+    list.innerHTML=all.length?all.map(reqCard).join(''):emptyBox('אין עדיין בקשות','כל בקשה שתירשם בביקור תופיע כאן עד לטיפול.');
+    return;
+  }
+  let rows=visits.filter(inPeriod);
+  if(view==='month'&&selDay)rows=rows.filter(v=>v.date===selDay);
+  rows.sort((a,b)=>b.date.localeCompare(a.date));
+  list.innerHTML=rows.length?rows.map(visitCard).join(''):
+    (view==='month'&&selDay?emptyBox('אין ביקורים ביום הזה','אפשר להוסיף ביקור בכפתור שלמעלה.'):emptyBox('אין ביקורים בתקופה הזו','אפשר להוסיף ביקור או לעבור לתקופה אחרת.'));
+}
+function contactRow(name){
+  const c=contacts[name]||{},n=visits.filter(v=>v.clinic===name).length;
+  return`<div class="doc">
+    <div class="thumb">${esc((c.name||name).trim().charAt(0)||'?')}</div>
+    <div class="dinfo"><b>${esc(name)}</b>
+      <span>${c.name?esc(c.name)+' · ':''}${c.phone?esc(c.phone):'<span class="noph">אין מספר</span>'}${c.city?' · '+esc(c.city):''} · ${n} ביקורים</span></div>
+    ${c.phone?`<button class="mini solid" data-cwa="${esc(name)}">וואטסאפ</button><button class="mini" data-ctel="${esc(name)}">חיוג</button>`:''}
+    <button class="mini" data-cedit="${esc(name)}">${c.phone||c.mail?'עריכה':'הוספת מספר'}</button>
+  </div>`;
+}
+function docRow(d){
+  const v=visits.find(x=>x.id===d.visitId),isImg=/^image\//.test(d.type),ext=(d.name.split('.').pop()||'').slice(0,4).toUpperCase();
+  return`<div class="doc">
+    <div class="thumb">${isImg?`<img src="${URL.createObjectURL(d.blob)}" alt="">`:esc(ext)}</div>
+    <div class="dinfo"><b>${esc(d.name)}</b><span>${v?esc(v.clinic)+' · '+fmt(v.date):'כללי'} · ${kb(d.size)}</span></div>
+    <button class="mini" data-open="${d.id}">פתיחה</button>
+    <button class="mini warn" data-delfile="${d.id}">מחיקה</button>
+  </div>`;
+}
+function visitCard(v){
+  const d=parse(v.date),n=docs.filter(f=>f.visitId===v.id).length,c=contacts[v.clinic]||{};
+  return`<article class="card ${v.req&&v.reqStatus==='open'?'open':''}">
+    <div class="chead">
+      <div class="datechip"><div class="d">${d.getDate()}</div><div class="m">${HE_S[d.getMonth()]}׳ ${HE_D[d.getDay()]}׳</div></div>
+      <div class="cbody"><h3 class="clinic">${esc(v.clinic)}</h3><div class="person">${esc(v.staff)||'—'} · ${esc(v.role)}${n?` · ${n} מסמכים`:''}${c.phone?'':' · <span class="noph">אין מספר</span>'}</div></div>
+    </div>
+    ${v.notes?`<div class="notes">${esc(v.notes)}</div>`:''}
+    ${v.req?`<div class="req ${v.reqStatus==='done'?'done':''}"><span class="rt">בקשה למשרד${v.pri==='דחוף'?' · דחוף':''}</span><span class="rtext">${esc(v.req)}</span></div>`:''}
+    ${v.next?`<div class="next">ביקור הבא: ${parse(v.next).getDate()} ב${HE_M[parse(v.next).getMonth()]}</div>`:''}
+    <div class="rowbtns">
+      ${v.req?`<button class="mini ${v.reqStatus==='open'?'solid':''}" data-toggle="${v.id}">${v.reqStatus==='open'?'סימון כטופל':'החזרה לפתוח'}</button>`:''}
+      <button class="mini" data-send="${v.id}">שליחה</button>
+      <button class="mini" data-edit="${v.id}">עריכה</button>
+      <button class="mini warn" data-del="${v.id}">מחיקה</button>
+    </div></article>`;
+}
+function reqCard(v){
+  const d=parse(v.date);
+  return`<article class="card ${v.reqStatus==='open'?'open':''}">
+    <div class="chead">
+      <div class="datechip"><div class="d">${d.getDate()}</div><div class="m">${HE_S[d.getMonth()]}׳</div></div>
+      <div class="cbody"><h3 class="clinic">${esc(v.clinic)}</h3><div class="person">${esc(v.staff)||'—'}${v.pri==='דחוף'?' · דחוף':''}</div></div>
+    </div>
+    <div class="req ${v.reqStatus==='done'?'done':''}"><span class="rt">${v.reqStatus==='open'?'ממתין לטיפול':'טופל'}</span><span class="rtext">${esc(v.req)}</span></div>
+    <div class="rowbtns">
+      <button class="mini ${v.reqStatus==='open'?'solid':''}" data-toggle="${v.id}">${v.reqStatus==='open'?'סימון כטופל':'החזרה לפתוח'}</button>
+      <button class="mini" data-edit="${v.id}">עריכה</button>
+    </div></article>`;
+}
+function drawStrip(){
+  const from=startWeek(view==='day'?anchor:period()[0]);let h='';
+  for(let i=0;i<7;i++){
+    const d=new Date(from);d.setDate(from.getDate()+i);
+    const key=iso(d),n=visits.filter(v=>v.date===key).length,sel=view==='day'&&key===iso(anchor);
+    h+=`<button class="cell ${sel?'sel':''}" data-day="${key}"><div class="dow">${HE_D[d.getDay()]}</div><div class="dnum">${d.getDate()}</div><div class="bar ${n?'has':''}"></div></button>`;
+  }
+  document.getElementById('strip').innerHTML=h;
+}
+function drawCalendar(){
+  document.getElementById('calHead').innerHTML=HE_D.map(d=>`<div class="hd">${d}</div>`).join('');
+  const[s,e]=period(),first=startWeek(s),cells=Math.ceil((s.getDay()+e.getDate())/7)*7,todayIso=iso(new Date());let h='';
+  for(let i=0;i<cells;i++){
+    const d=new Date(first);d.setDate(first.getDate()+i);
+    const key=iso(d),day=visits.filter(v=>v.date===key),other=d.getMonth()!==s.getMonth();
+    h+=`<button class="day ${other?'mute':''} ${key===todayIso?'now':''} ${key===selDay?'sel':''}" data-day="${key}">
+      <span class="n">${d.getDate()}</span>
+      <span class="dots">${day.slice(0,3).map(v=>`<span class="dot ${v.req&&v.reqStatus==='open'?'open':''}"></span>`).join('')}${day.length>3?`<span class="plus">+${day.length-3}</span>`:''}</span></button>`;
+  }
+  document.getElementById('cal').innerHTML=h;
+  if(selDay){const d=parse(selDay),n=visits.filter(v=>v.date===selDay).length;
+    document.getElementById('dayTitle').textContent=`יום ${HE_D[d.getDay()]}׳, ${d.getDate()} ב${HE_M[d.getMonth()]} · ${n} ביקורים`}
+}
+function fillDatalists(){
+  const cl=clinicNames();
+  document.getElementById('clinics').innerHTML=cl.map(c=>`<option value="${esc(c)}">`).join('');
+  document.getElementById('staff').innerHTML=[...new Set(visits.map(v=>v.staff).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('');
+  document.getElementById('sClinic').innerHTML=cl.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+/* ============== summary ============== */
+function buckets(mode,a){
+  const[s,e]=rangeOf(mode,a),out=[];
+  if(mode==='month'){let cur=startWeek(s),i=1;while(cur<=e){const end=new Date(cur);end.setDate(cur.getDate()+6);out.push({lab:`ש'${i++}`,from:new Date(cur),to:end});cur=new Date(end);cur.setDate(cur.getDate()+1)}}
+  else{for(let m=s.getMonth();m<=e.getMonth();m++)out.push({lab:HE_S[m],from:new Date(s.getFullYear(),m,1),to:new Date(s.getFullYear(),m+1,0)})}
+  return out.map(b=>({...b,n:visits.filter(v=>between(v,b.from,b.to)).length}));
+}
+function drawSummary(){
+  const rows=visits.filter(inPeriod),[s,e]=period();
+  const weeks=Math.max(1,(Math.round((e-s)/864e5)+1)/7);
+  const clinics={};rows.forEach(v=>{const c=clinics[v.clinic]=clinics[v.clinic]||{n:0,last:'',req:0};c.n++;if(v.date>c.last)c.last=v.date;if(v.req)c.req++});
+  const top=Object.entries(clinics).sort((a,b)=>b[1].n-a[1].n);
+  const roles={};rows.forEach(v=>roles[v.role]=(roles[v.role]||0)+1);
+  const reqs=rows.filter(v=>v.req),openAll=visits.filter(v=>v.req&&v.reqStatus==='open');
+  const bk=buckets(sumMode,anchor),max=Math.max(1,...bk.map(b=>b.n));
+  const cold=[...new Set([...visits.filter(v=>parse(v.date)<s).map(v=>v.clinic),...Object.keys(contacts)])].filter(c=>c&&!clinics[c]);
+  const noPhone=Object.keys(clinics).filter(c=>!(contacts[c]||{}).phone);
+  document.getElementById('sumView').innerHTML=`
+  <div class="stats four" style="padding:14px 0 4px">
+    <div class="tile"><div class="n num">${rows.length}</div><div class="l">ביקורים בתקופה</div></div>
+    <div class="tile"><div class="n num">${top.length}</div><div class="l">מרפאות שבוקרו</div></div>
+    <div class="tile"><div class="n num">${(rows.length/weeks).toFixed(1)}</div><div class="l">ממוצע ביקורים לשבוע</div></div>
+    <div class="tile alert"><div class="n num">${reqs.length}</div><div class="l">בקשות (${openAll.length} פתוחות)</div></div>
+  </div>
+  <div class="panel"><h3>פיזור הביקורים</h3><div class="chart">${bk.map(b=>`<div class="col"><span class="colval">${b.n||''}</span><div class="colbar ${b.n?'':'zero'}" style="height:${b.n?Math.max(6,b.n/max*82):3}px"></div><span class="collab">${b.lab}</span></div>`).join('')}</div></div>
+  <div class="panel"><h3>מרפאות מובילות</h3>${top.length?`<table><thead><tr><th>מרפאה / רופא</th><th class="n">ביקורים</th><th class="n">אחרון</th></tr></thead><tbody>${top.slice(0,12).map(([c,d])=>`<tr><td>${esc(c)}</td><td class="n">${d.n}</td><td class="n" style="font-weight:400;font-size:12.5px">${fmt(d.last).slice(0,5)}</td></tr>`).join('')}</tbody></table>`:emptyBox('אין נתונים בתקופה','')}</div>
+  <div class="panel"><h3>עם מי נפגשנו</h3>${Object.entries(roles).sort((a,b)=>b[1]-a[1]).map(([r,n])=>`<span class="pill">${esc(r)} <b>${n}</b></span>`).join('')||'<span class="collab">אין נתונים</span>'}</div>
+  ${noPhone.length?`<div class="panel"><h3>מרפאות בלי מספר טלפון</h3><div class="warnbox">${noPhone.length} מרפאות בוקרו בתקופה בלי פרטי קשר שמורים: <b>${noPhone.slice(0,8).map(esc).join(' · ')}</b>${noPhone.length>8?` ועוד ${noPhone.length-8}`:''}</div></div>`:''}
+  ${cold.length?`<div class="panel"><h3>לא בוקרו בתקופה</h3><div class="warnbox">${cold.length} מרפאות שבוקרו בעבר לא קיבלו ביקור בתקופה הזו:<br><b>${cold.slice(0,10).map(esc).join(' · ')}</b>${cold.length>10?` ועוד ${cold.length-10}`:''}</div></div>`:''}
+  <div class="panel"><h3>בקשות שנרשמו בתקופה</h3>${reqs.length?reqs.sort((a,b)=>a.date.localeCompare(b.date)).map(v=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:14px"><b style="font-family:Heebo">${esc(v.clinic)}</b> <span class="collab">· ${fmt(v.date)}</span><br>${esc(v.req)}<span class="pill" style="background:${v.reqStatus==='open'?'#FCEFD9':'var(--mint)'}">${v.reqStatus==='open'?'פתוח':'טופל'}</span></div>`).join(''):emptyBox('לא נרשמו בקשות','')}</div>`;
+}
+
+/* ============== sheets ============== */
+const scrim=document.getElementById('scrim');
+const openS=id=>{document.getElementById(id).classList.add('show');scrim.classList.add('show')};
+const closeAll=()=>{document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show'));scrim.classList.remove('show')};
+scrim.onclick=closeAll;
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeAll);
+
+let pendingTarget='visit';
+function openVisit(v,dateStr){
+  editId=v?v.id:null;pending=[];pendingTarget='visit';
+  document.getElementById('sheetTitle').textContent=v?'עריכת ביקור':'ביקור חדש';
+  fDate.value=v?v.date:(dateStr||selDay||(view==='day'?iso(anchor):iso(new Date())));
+  fStaff.value=v?v.staff:'';fRole.value=v?v.role:'רופא/ה';
+  fNotes.value=v?v.notes:'';fReq.value=v?v.req:'';fPri.value=v?v.pri:'רגיל';fNext.value=v?(v.next||''):'';
+  setClinic(v?v.clinic:'');
+  drawPending(v?docs.filter(f=>f.visitId===v.id).length:0);
+  openS('sheet');
+}
+document.getElementById('vPick').onclick=async()=>{
+  const c=await pickFromPhone();if(!c)return;
+  vPhone.value=c.phone||vPhone.value;vMail.value=c.mail||vMail.value;
+  if(!fStaff.value&&c.name)fStaff.value=c.name;
+  if(!fClinic.value&&c.name)setClinic(c.name);
+  toast('הפרטים נשלפו מאנשי הקשר');
+};
+function drawPending(existing){
+  document.getElementById('pendingList').textContent=[existing?`${existing} מסמכים שמורים`:'',pending.length?`${pending.length} חדשים: ${pending.map(f=>f.name).join(', ')}`:''].filter(Boolean).join(' · ');
+}
+document.getElementById('pickFiles').onclick=()=>{pendingTarget='visit';document.getElementById('fFiles').click()};
+document.getElementById('fFiles').onchange=async e=>{
+  const list=[...e.target.files];e.target.value='';
+  if(!list.length)return;
+  if(pendingTarget==='visit'){pending=pending.concat(list);drawPending(editId?docs.filter(f=>f.visitId===editId).length:0);return}
+  for(const f of list)await saveFile(f,null);
+  render();toast('המסמך נשמר');
+};
+async function saveFile(file,visitId){
+  try{
+    const small=await compress(file);
+    const rec={id:Date.now()+''+Math.random().toString(16).slice(2,6),visitId,name:file.name,type:small.type||file.type,size:small.size,blob:small,added:Date.now()};
+    await files.put(rec);docs.push(rec);
+  }catch(e){files.ok=false;toast('שמירת הקובץ נכשלה בסביבה הזו')}
+}
+document.getElementById('add').onclick=()=>openVisit();
+document.getElementById('addDay').onclick=()=>openVisit(null,selDay);
+document.getElementById('save').onclick=async()=>{
+  if(!fClinic.value.trim())return toast('צריך למלא שם רופא או מרפאה');
+  const data={date:fDate.value||iso(new Date()),clinic:fClinic.value.trim(),staff:fStaff.value.trim(),role:fRole.value,
+    notes:fNotes.value.trim(),req:fReq.value.trim(),pri:fPri.value,next:fNext.value||''};
+  let id=editId;
+  if(editId){const v=visits.find(x=>x.id===editId),wasDone=v.reqStatus==='done'&&v.req===data.req;Object.assign(v,data);v.reqStatus=data.req?(wasDone?'done':'open'):''}
+  else{id=Date.now()+''+Math.random().toString(16).slice(2,6);visits.push({id,...data,reqStatus:data.req?'open':''})}
+  const prev=contacts[data.clinic]||{};
+  contacts[data.clinic]={name:prev.name||data.staff||'',phone:vPhone.value.trim()||prev.phone||'',
+    mail:vMail.value.trim()||prev.mail||'',city:prev.city||''};
+  await kv.set(K_C,contacts);
+  for(const f of pending)await saveFile(f,id);
+  pending=[];await kv.set(K_V,visits);closeAll();render();toast('הביקור נשמר');
+};
+
+/* ============== contact sheet ============== */
+function openContact(name){
+  cKey=name;const c=contacts[name]||{};
+  document.getElementById('cTitle').textContent=name||'מרפאה חדשה';
+  cName.value=name||'';cPerson.value=c.name||'';cPhone.value=c.phone||'';cMail.value=c.mail||'';cCity.value=c.city||'';
+  document.getElementById('cResults').innerHTML='';
+  openS('cSheet');
+}
+document.getElementById('cPick').onclick=async()=>{
+  const c=await pickFromPhone();if(!c)return;
+  cPerson.value=c.name||cPerson.value;cPhone.value=c.phone||cPhone.value;cMail.value=c.mail||cMail.value;
+  toast('הפרטים נשלפו מאנשי הקשר');
+};
+document.getElementById('cVcfBtn').onclick=()=>document.getElementById('cVcf').click();
+document.getElementById('cVcf').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const list=parseVcf(r.result);
+    if(!list.length)return toast('לא נמצאו אנשי קשר בקובץ');
+    if(list.length===1){const c=list[0];cPerson.value=c.name;cPhone.value=c.phone;cMail.value=c.mail;return toast('הפרטים יובאו')}
+    document.getElementById('cResults').innerHTML='<div class="pending">נמצאו '+list.length+' אנשי קשר — לבחירה:</div>'+
+      list.slice(0,60).map((c,i)=>`<button data-vc="${i}"><b>${esc(c.name||'ללא שם')}</b><br>${esc(c.phone||'')}</button>`).join('');
+    document.getElementById('cResults').onclick=ev=>{
+      const b=ev.target.closest('[data-vc]');if(!b)return;
+      const c=list[+b.dataset.vc];cPerson.value=c.name;cPhone.value=c.phone;cMail.value=c.mail;
+      document.getElementById('cResults').innerHTML='';toast('הפרטים יובאו');
+    };
+  };
+  r.readAsText(f);
+};
+document.getElementById('cSave').onclick=async()=>{
+  const key=cName.value.trim();
+  if(!key)return toast('צריך למלא שם מרפאה');
+  const isNew=!cKey, renamed=cKey&&key!==cKey;
+  if(renamed){
+    const merging=!!contacts[key];
+    if(!confirm(merging?`"${cKey}" ימוזג לתוך "${key}" — כל הביקורים יעברו. להמשיך?`:`לשנות את שם המרפאה ל-"${key}"? כל הביקורים יעודכנו.`))return;
+    visits.forEach(v=>{if(v.clinic===cKey)v.clinic=key});
+    delete contacts[cKey];await kv.set(K_V,visits);
+  }
+  contacts[key]={name:cPerson.value.trim(),phone:cPhone.value.trim(),mail:cMail.value.trim(),city:cCity.value.trim()};
+  await kv.set(K_C,contacts);closeAll();tab='contacts';render();
+  toast(isNew?'המרפאה נוספה':renamed?'השם עודכן בכל הביקורים':'פרטי הקשר נשמרו');
+};
+
+/* ============== bulk contact import ============== */
+let impRows=[],impHeads=[],impVcards=null,impName='';
+const HINTS={clinic:['מרפאה','רופא','לקוח','שם','clinic','doctor','name','account'],person:['איש קשר','אישקשר','קשר','מזכיר','contact','person'],
+  phone:['נייד','טלפון','פלאפון','סלולר','phone','mobile','tel','cell'],mail:['מייל','אימייל','דוא','email','mail'],city:['עיר','ישוב','יישוב','כתובת','אזור','city','address','region']};
+const normPhone=p=>{
+  let d=String(p==null?'':p).trim().replace(/[^\d+]/g,'');
+  if(!d)return'';
+  if(d.startsWith('+972'))d='0'+d.slice(4);
+  if(/^9725\d{8}$/.test(d))d='0'+d.slice(3);
+  if(/^5\d{8}$/.test(d))d='0'+d;
+  return d;
+};
+function guessCol(kind){
+  const hints=HINTS[kind];
+  for(let i=0;i<impHeads.length;i++){const h=String(impHeads[i]||'').toLowerCase().trim();if(h&&hints.some(x=>h.includes(x)))return i}
+  return -1;
+}
+function fillMap(el,kind,required){
+  const g=guessCol(kind);
+  el.innerHTML=(required?'':'<option value="-1">— ללא —</option>')+impHeads.map((h,i)=>`<option value="${i}">${esc(String(h||'עמודה '+(i+1)))}</option>`).join('');
+  el.value=g>=0?g:(required?0:-1);
+}
+function impPreviewCalc(){
+  if(impVcards){document.getElementById('impPreview').innerHTML=`<b>${esc(impName)}</b><br>נמצאו ${impVcards.length} אנשי קשר בקובץ vCard`;return}
+  const c=+mClinic.value;
+  const names=impRows.map(r=>String(r[c]==null?'':r[c]).trim()).filter(Boolean);
+  const uniq=[...new Set(names)],exist=uniq.filter(n=>contacts[n]).length;
+  document.getElementById('impPreview').innerHTML=`<b>${esc(impName)}</b><br>${uniq.length} מרפאות · ${uniq.length-exist} חדשות · ${exist} כבר קיימות`+
+    (names.length-uniq.length?`<br>${names.length-uniq.length} שורות כפולות ימוזגו לפי שם`:'')+
+    (names.length<impRows.length?`<br>${impRows.length-names.length} שורות ללא שם ידולגו`:'');
+}
+document.getElementById('impOpen2').onclick=()=>openS('impSheet');
+document.getElementById('goContacts').onclick=()=>{if(view==='sum')view='week';tab='contacts';render();document.getElementById('tabs').scrollIntoView({behavior:'smooth',block:'start'})};
+document.getElementById('impPick').onclick=()=>document.getElementById('impFile').click();
+document.getElementById('impFile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  impName=f.name;
+  try{
+    if(/\.vcf$/i.test(f.name)){
+      const list=parseVcf(await f.text());
+      if(!list.length)return toast('לא נמצאו אנשי קשר בקובץ');
+      impVcards=list;impRows=[];impHeads=[];
+      document.getElementById('impMap').classList.add('hide');
+    }else{
+      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,blankrows:false,defval:''});
+      if(rows.length<2)return toast('הקובץ ריק או חסר שורת כותרות');
+      impVcards=null;impHeads=rows[0];impRows=rows.slice(1);
+      fillMap(mClinic,'clinic',true);fillMap(mPerson,'person');fillMap(mPhone,'phone');fillMap(mMail,'mail');fillMap(mCity,'city');
+      document.getElementById('impMap').classList.remove('hide');
+    }
+    document.getElementById('impGo').classList.remove('hide');
+    impPreviewCalc();
+  }catch(err){toast('לא הצלחתי לקרוא את הקובץ')}
+};
+['mClinic','mPerson','mPhone','mMail','mCity'].forEach(id=>document.getElementById(id).onchange=impPreviewCalc);
+document.getElementById('impTpl').onclick=()=>{
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([['שם המרפאה / הרופא','איש קשר','טלפון','מייל','עיר'],
+    ['מרפאת שיניים לדוגמה','ד״ר כהן','050-0000000','clinic@mail.com','תל אביב']]);
+  ws['!cols']=[{wch:32},{wch:18},{wch:16},{wch:26},{wch:14}];ws['!views']=[{RTL:true}];
+  XLSX.utils.book_append_sheet(wb,ws,'אנשי קשר');
+  XLSX.writeFile(wb,'תבנית אנשי קשר מרפאות.xlsx');
+};
+document.getElementById('impGo').onclick=async()=>{
+  const over=impVcards?false:mPolicy.value==='over';let added=0,upd=0;
+  const put=(key,rec)=>{
+    key=String(key||'').trim();if(!key)return;
+    const prev=contacts[key];
+    const phone=normPhone(rec.phone);
+    if(!prev){contacts[key]={name:rec.name||'',phone,mail:rec.mail||'',city:rec.city||''};added++;return}
+    contacts[key]={
+      name:over?(rec.name||prev.name||''):(prev.name||rec.name||''),
+      phone:over?(phone||prev.phone||''):(prev.phone||phone||''),
+      mail:over?(rec.mail||prev.mail||''):(prev.mail||rec.mail||''),
+      city:over?(rec.city||prev.city||''):(prev.city||rec.city||'')};
+    upd++;
+  };
+  if(impVcards)impVcards.forEach(c=>put(c.name,{name:c.name,phone:c.phone,mail:c.mail}));
+  else{
+    const g=(r,sel)=>{const i=+sel.value;return i>=0?String(r[i]==null?'':r[i]).trim():''};
+    impRows.forEach(r=>{const key=g(r,mClinic);if(key)put(key,{name:g(r,mPerson),phone:g(r,mPhone),mail:g(r,mMail),city:g(r,mCity)})});
+  }
+  await kv.set(K_C,contacts);
+  impRows=[];impVcards=null;document.getElementById('impGo').classList.add('hide');
+  closeAll();tab='contacts';render();toast(`יובאו ${added} מרפאות חדשות · ${upd} עודכנו`);
+};
+
+/* ============== clinic picker ============== */
+const closeS=id=>document.getElementById(id).classList.remove('show');
+function setClinic(name){
+  document.getElementById('fClinic').value=name;
+  document.getElementById('fClinicTxt').textContent=name||'בחירה או הוספה של מרפאה';
+  document.getElementById('fClinicBtn').classList.toggle('empty-val',!name);
+  const c=contacts[name]||{};
+  vPhone.value=c.phone||'';vMail.value=c.mail||'';
+  document.getElementById('fClinicMeta').textContent=name?[c.name||'',c.city||'',`${visits.filter(v=>v.clinic===name).length} ביקורים קודמים`].filter(Boolean).join(' · '):'';
+}
+function drawPick(){
+  const raw=document.getElementById('pkQ').value.trim(),q=raw.toLowerCase(),all=clinicNames();
+  const hits=all.filter(n=>!q||n.toLowerCase().includes(q));
+  const exact=all.some(n=>n.toLowerCase()===q);
+  let h='';
+  if(raw&&!exact)h+=`<button class="newrow" data-new="1">+ הוספת מרפאה חדשה: <b>${esc(raw)}</b></button>`;
+  h+=hits.length?hits.map(n=>{const c=contacts[n]||{},k=visits.filter(v=>v.clinic===n).length;
+      return`<button data-pick="${esc(n)}"><b>${esc(n)}</b><br><span class="collab">${c.phone?esc(c.phone):'ללא טלפון'}${c.city?' · '+esc(c.city):''}${k?' · '+k+' ביקורים':''}</span></button>`}).join('')
+    :(raw?'':'<div class="empty"><b>אין עדיין מרפאות</b>אפשר להקליד שם חדש למעלה, או לייבא רשימה מקובץ.</div>');
+  document.getElementById('pkList').innerHTML=h;
+}
+document.getElementById('fClinicBtn').onclick=()=>{
+  document.getElementById('pkQ').value='';drawPick();
+  document.getElementById('pickSheet').classList.add('show');scrim.classList.add('show');
+  setTimeout(()=>document.getElementById('pkQ').focus(),260);
+};
+document.getElementById('pkQ').oninput=drawPick;
+document.getElementById('pkClose').onclick=()=>closeS('pickSheet');
+document.getElementById('pkList').onclick=async e=>{
+  const pick=e.target.closest('[data-pick]'),add=e.target.closest('[data-new]');
+  if(pick){setClinic(pick.dataset.pick);closeS('pickSheet');return}
+  if(add){
+    const name=document.getElementById('pkQ').value.trim();if(!name)return;
+    if(!contacts[name]){contacts[name]={name:'',phone:'',mail:'',city:''};await kv.set(K_C,contacts);fillDatalists()}
+    setClinic(name);closeS('pickSheet');toast('המרפאה נוספה לרשימת הלקוחות');
+  }
+};
+
+/* ============== export sheet ============== */
+const eType=document.getElementById('eType'),eYear=document.getElementById('eYear'),eSub=document.getElementById('eSub');
+function initExport(){
+  const y=new Date().getFullYear();
+  eYear.innerHTML=[y+1,y,y-1,y-2,y-3].map(n=>`<option ${n===y?'selected':''}>${n}</option>`).join('');
+  eFrom.value=iso(period()[0]);eTo.value=iso(period()[1]);
+  eType.value=['month','quarter','half','year'].includes(curMode())?curMode():'month';
+  syncExport();
+}
+function syncExport(){
+  const t=eType.value,cust=t==='custom';
+  document.getElementById('eStd').classList.toggle('hide',cust);
+  document.getElementById('eCustom').classList.toggle('hide',!cust);
+  document.getElementById('eSubWrap').classList.toggle('hide',t==='year');
+  if(!cust&&t!=='year'){
+    const opts=t==='month'?HE_M.map((m,i)=>[i,m]):t==='quarter'?[0,1,2,3].map(q=>[q*3,`רבעון ${q+1}`]):[[0,'חציון 1'],[6,'חציון 2']];
+    const cur=+eSub.value,m=new Date().getMonth();
+    eSub.innerHTML=opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    eSub.value=opts.some(o=>o[0]===cur)?cur:(t==='month'?m:t==='quarter'?Math.floor(m/3)*3:(m<6?0:6));
+  }
+  previewExport();
+}
+function exportRange(){
+  const t=eType.value;
+  if(t==='custom'){
+    const f=eFrom.value?parse(eFrom.value):new Date(),tt=eTo.value?parse(eTo.value):new Date();
+    return[f,tt,`${fmt(iso(f))}–${fmt(iso(tt))}`,'custom'];
+  }
+  const a=new Date(+eYear.value,t==='year'?0:+eSub.value,1);
+  const[s,e]=rangeOf(t,a);return[s,e,labelOf(t,a),t];
+}
+function previewExport(){
+  const[s,e,lab]=exportRange(),rows=visits.filter(v=>between(v,s,e));
+  document.getElementById('ePreview').innerHTML=`<b>${lab}</b><br>${rows.length} ביקורים · ${new Set(rows.map(v=>v.clinic)).size} מרפאות`;
+}
+[eType,eYear,eSub,document.getElementById('eFrom'),document.getElementById('eTo')].forEach(el=>el.onchange=()=>{el===eType?syncExport():previewExport()});
+document.getElementById('openExport').onclick=()=>{initExport();openS('expSheet')};
+document.getElementById('eXlsx').onclick=()=>{const[s,e,lab,t]=exportRange();buildExcel(s,e,lab,t)};
+document.getElementById('eWa').onclick=()=>{const[s,e,lab]=exportRange();openWa(summaryText(s,e,lab))};
+
+/* ============== excel ============== */
+function buildExcel(s,e,label,mode){
+  const rows=visits.filter(v=>between(v,s,e)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!rows.length)return toast('אין ביקורים בתקופה הזו');
+  const wb=XLSX.utils.book_new(),RTL=[{RTL:true}];
+  const ws=XLSX.utils.aoa_to_sheet([[`דוח ביקורי מרפאות שיניים · ${label}`],[],
+    ['תאריך','יום','רופא / מרפאה','איש צוות','תפקיד','הערות ודגשים','בקשה למשרד','דחיפות','סטטוס בקשה','ביקור הבא','מסמכים'],
+    ...rows.map(v=>[fmt(v.date),HE_D[parse(v.date).getDay()],v.clinic,v.staff,v.role,v.notes,v.req,v.req?v.pri:'',v.req?(v.reqStatus==='done'?'טופל':'פתוח'):'',fmt(v.next),docs.filter(f=>f.visitId===v.id).map(f=>f.name).join(', ')])]);
+  ws['!cols']=[{wch:11},{wch:5},{wch:26},{wch:16},{wch:13},{wch:44},{wch:34},{wch:9},{wch:11},{wch:11},{wch:28}];ws['!views']=RTL;
+  XLSX.utils.book_append_sheet(wb,ws,'ביקורים');
+
+  const weeks=Math.max(1,(Math.round((e-s)/864e5)+1)/7);
+  const clinics={};rows.forEach(v=>{const c=clinics[v.clinic]=clinics[v.clinic]||{n:0,last:'',req:0};c.n++;if(v.date>c.last)c.last=v.date;if(v.req)c.req++});
+  const roles={};rows.forEach(v=>roles[v.role]=(roles[v.role]||0)+1);
+  const reqs=rows.filter(v=>v.req),bk=mode==='custom'?[]:buckets(mode,s);
+  const kpi=XLSX.utils.aoa_to_sheet([[`סיכום · ${label}`],[],
+    ['סה״כ ביקורים',rows.length],['מרפאות שבוקרו',Object.keys(clinics).length],['ממוצע ביקורים לשבוע',+(rows.length/weeks).toFixed(1)],
+    ['בקשות שנרשמו',reqs.length],['בקשות פתוחות',reqs.filter(v=>v.reqStatus==='open').length],[],
+    ['פילוח לפי תפקיד',''],...Object.entries(roles).sort((a,b)=>b[1]-a[1]),
+    ...(bk.length?[[],['פיזור לאורך התקופה',''],...bk.map(b=>[b.lab,b.n])]:[])]);
+  kpi['!cols']=[{wch:26},{wch:12}];kpi['!views']=RTL;
+  XLSX.utils.book_append_sheet(wb,kpi,'סיכום');
+
+  const byc=XLSX.utils.aoa_to_sheet([['מרפאה / רופא','איש קשר','טלפון','מייל','עיר','ביקורים','ביקור אחרון','בקשות'],
+    ...Object.entries(clinics).sort((a,b)=>b[1].n-a[1].n).map(([c,d])=>{const k=contacts[c]||{};return[c,k.name||'',k.phone||'',k.mail||'',k.city||'',d.n,fmt(d.last),d.req]})]);
+  byc['!cols']=[{wch:30},{wch:18},{wch:15},{wch:24},{wch:14},{wch:10},{wch:13},{wch:9}];byc['!views']=RTL;
+  XLSX.utils.book_append_sheet(wb,byc,'לפי מרפאה');
+
+  const open=visits.filter(v=>v.req&&v.reqStatus==='open').sort((a,b)=>a.date.localeCompare(b.date));
+  if(open.length){
+    const ws2=XLSX.utils.aoa_to_sheet([['בקשות פתוחות למשרד תרו'],[],['תאריך','רופא / מרפאה','איש צוות','הבקשה','דחיפות'],
+      ...open.map(v=>[fmt(v.date),v.clinic,v.staff,v.req,v.pri])]);
+    ws2['!cols']=[{wch:11},{wch:26},{wch:16},{wch:46},{wch:9}];ws2['!views']=RTL;
+    XLSX.utils.book_append_sheet(wb,ws2,'בקשות פתוחות');
+  }
+  XLSX.writeFile(wb,`דוח ביקורים ${label.replace(/[/\\?%*:|"<>]/g,'-')}.xlsx`);
+  toast('הקובץ ירד — אפשר לצרף לשליחה');
+}
+document.getElementById('xlsxQuick').onclick=()=>{const[s,e]=period();buildExcel(s,e,periodLabel(),curMode())};
+
+/* ============== messages ============== */
+function summaryText(s,e,label){
+  const rows=visits.filter(v=>between(v,s,e));
+  if(!rows.length)return`אין ביקורים בתקופה ${label}`;
+  const c={};rows.forEach(v=>c[v.clinic]=(c[v.clinic]||0)+1);
+  const reqs=rows.filter(v=>v.req),open=reqs.filter(v=>v.reqStatus==='open');
+  let t=`*סיכום ביקורי מרפאות שיניים*\n${label}\n\nביקורים: ${rows.length}\nמרפאות: ${Object.keys(c).length}\nבקשות: ${reqs.length} (${open.length} פתוחות)\n\n*מרפאות מובילות*\n`;
+  Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8).forEach(([n,k])=>t+=`• ${n} — ${k}\n`);
+  if(open.length){t+=`\n*בקשות פתוחות*\n`;open.forEach(v=>t+=`• ${v.clinic}: ${v.req}\n`)}
+  return t+(settings.name?`\n${settings.name}`:'');
+}
+function detailText(s,e,label){
+  const rows=visits.filter(v=>between(v,s,e)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!rows.length)return`אין ביקורים בתקופה ${label}`;
+  let t=`*דוח ביקורים*\n${label}\nסה״כ ${rows.length} ביקורים\n`;
+  rows.forEach(v=>{t+=`\n*${fmt(v.date)} · ${v.clinic}*\n${v.staff?`נפגשתי עם: ${v.staff} (${v.role})\n`:''}${v.notes?`${v.notes}\n`:''}${v.req?`בקשה למשרד: ${v.req}${v.pri==='דחוף'?' (דחוף)':''}\n`:''}`});
+  return t+(settings.name?`\n${settings.name}`:'');
+}
+const openWa=(text,phone)=>{
+  const n=waNum(phone);
+  window.open(n?`https://wa.me/${n}?text=${encodeURIComponent(text)}`:`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+};
+const openMail=(to,subj,body)=>{location.href=`mailto:${to||''}?subject=${encodeURIComponent(subj||'')}&body=${encodeURIComponent(body||'')}`};
+document.getElementById('waQuick').onclick=()=>{const[s,e]=period();openWa(detailText(s,e,periodLabel()),settings.phone)};
+
+const sTo=document.getElementById('sTo'),sClinic=document.getElementById('sClinic'),sTpl=document.getElementById('sTpl');
+function openSend(visitId){
+  const v=visitId?visits.find(x=>x.id===visitId):null;
+  sTo.value=v?'clinic':'office';
+  if(v){sClinic.value=v.clinic;sTpl.value='thanks'}else sTpl.value='summary';
+  syncSend();openS('sendSheet');
+}
+function syncSend(){
+  const isClinic=sTo.value==='clinic';
+  document.getElementById('sClinicBox').classList.toggle('hide',!isClinic);
+  const c=contacts[sClinic.value]||{};
+  document.getElementById('sPhone').value=c.phone||'';
+  document.getElementById('sEmail').value=c.mail||'';
+  const[s,e]=period(),lab=periodLabel(),name=sClinic.value||'';
+  const last=visits.filter(x=>x.clinic===name).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const who=c.name||(last&&last.staff)||'';
+  const sign=settings.name?`\n\n${settings.name}\nתרו`:'\n\nתרו';
+  let subj='',body='';
+  switch(sTpl.value){
+    case'thanks':subj=`תודה על הפגישה · ${name}`;
+      body=`שלום${who?' '+who:''},\n\nתודה על הזמן שהקדשתם לי${last?` בביקור ב-${fmt(last.date)}`:''}.\nמצרפת את החומרים שדיברנו עליהם, ואשמח לעמוד לרשותכם בכל שאלה.${sign}`;break;
+    case'followup':subj=`תיאום ביקור המשך · ${name}`;
+      body=`שלום${who?' '+who:''},\n\nרציתי לתאם את הביקור הבא${last&&last.next?` סביב ${fmt(last.next)}`:''}.\nמה נוח לכם השבוע?${sign}`;break;
+    case'summary':subj=`סיכום ביקורים · ${lab}`;body=summaryText(s,e,lab);break;
+    case'reqs':{const open=visits.filter(v=>v.req&&v.reqStatus==='open');subj=`בקשות פתוחות למשרד (${open.length})`;
+      body=open.length?`*בקשות פתוחות*\n\n`+open.map(v=>`• ${v.clinic} (${fmt(v.date)}): ${v.req}${v.pri==='דחוף'?' — דחוף':''}`).join('\n')+sign:'אין בקשות פתוחות.';break}
+    default:subj='';body='';
+  }
+  document.getElementById('sSubj').value=subj;document.getElementById('sBody').value=body;
+}
+sTo.onchange=syncSend;sClinic.onchange=syncSend;sTpl.onchange=syncSend;
+document.getElementById('openSend').onclick=()=>openSend(null);
+document.getElementById('sPick').onclick=async()=>{
+  const c=await pickFromPhone();if(!c)return;
+  if(c.phone)document.getElementById('sPhone').value=c.phone;
+  if(c.mail)document.getElementById('sEmail').value=c.mail;
+  await rememberContact();toast('הפרטים נשלפו ונשמרו למרפאה');
+};
+async function rememberContact(){
+  if(sTo.value!=='clinic'||!sClinic.value)return;
+  const prev=contacts[sClinic.value]||{};
+  contacts[sClinic.value]={name:prev.name||'',phone:document.getElementById('sPhone').value.trim(),mail:document.getElementById('sEmail').value.trim()};
+  await kv.set(K_C,contacts);
+}
+document.getElementById('sWa').onclick=async()=>{await rememberContact();
+  openWa(document.getElementById('sBody').value,sTo.value==='clinic'?document.getElementById('sPhone').value:settings.phone)};
+document.getElementById('sMail').onclick=async()=>{await rememberContact();
+  openMail(sTo.value==='clinic'?document.getElementById('sEmail').value:settings.mail,document.getElementById('sSubj').value,document.getElementById('sBody').value)};
+
+/* ============== settings ============== */
+document.getElementById('openSettings').onclick=()=>{
+  gName.value=settings.name||'';gPhone.value=settings.phone||'';gMail.value=settings.mail||'';
+  document.getElementById('pickNote').textContent=canPick?'שליפה ישירה מאנשי הקשר זמינה במכשיר הזה.':'שליפה ישירה מאנשי הקשר לא נתמכת בדפדפן הזה — אפשר לייבא קובץ vCard או להקליד ידנית.';
+  openS('setSheet');
+};
+document.getElementById('gSave').onclick=async()=>{settings={name:gName.value.trim(),phone:gPhone.value.trim(),mail:gMail.value.trim()};await kv.set(K_S,settings);closeAll();toast('ההגדרות נשמרו')};
+document.getElementById('vcfOut').onclick=()=>{
+  const t=vcfAll();if(!t)return toast('אין אנשי קשר עם מספר לשמירה');
+  dl(new Blob([t],{type:'text/vcard'}),`מרפאות שיניים ${iso(new Date())}.vcf`);toast('הקובץ ירד — פתיחה שלו תשמור את אנשי הקשר בנייד');
+};
+
+/* ============== events ============== */
+function dl(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+document.getElementById('seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.view;
+  if(view==='month'&&!selDay){const t=new Date();if(t.getMonth()===anchor.getMonth()&&t.getFullYear()===anchor.getFullYear())selDay=iso(t)}render()};
+document.getElementById('segSum').onclick=e=>{const b=e.target.closest('button');if(b){sumMode=b.dataset.sum;render()}};
+document.getElementById('tabs').onclick=e=>{const b=e.target.closest('button');if(b){tab=b.dataset.tab;render()}};
+document.getElementById('prev').onclick=()=>shift(-1);
+document.getElementById('next').onclick=()=>shift(1);
+document.getElementById('today').onclick=()=>{anchor=new Date();selDay=view==='month'?iso(anchor):null;render()};
+document.getElementById('strip').onclick=e=>{const b=e.target.closest('[data-day]');if(b){anchor=parse(b.dataset.day);view='day';render()}};
+document.getElementById('cal').onclick=e=>{const b=e.target.closest('[data-day]');if(!b)return;const key=b.dataset.day;
+  if(selDay===key)return openVisit(null,key);
+  selDay=key;if(parse(key).getMonth()!==period()[0].getMonth())anchor=parse(key);tab='visits';render()};
+document.getElementById('list').onclick=async e=>{
+  const t=e.target.closest('[data-toggle]'),ed=e.target.closest('[data-edit]'),dlb=e.target.closest('[data-del]'),
+        sd=e.target.closest('[data-send]'),op=e.target.closest('[data-open]'),df=e.target.closest('[data-delfile]'),
+        ce=e.target.closest('[data-cedit]'),cw=e.target.closest('[data-cwa]'),ct=e.target.closest('[data-ctel]');
+  if(t){const v=visits.find(x=>x.id===t.dataset.toggle);v.reqStatus=v.reqStatus==='open'?'done':'open';await kv.set(K_V,visits);render()}
+  if(ed)openVisit(visits.find(x=>x.id===ed.dataset.edit));
+  if(sd)openSend(sd.dataset.send);
+  if(dlb&&confirm('למחוק את הביקור?')){visits=visits.filter(x=>x.id!==dlb.dataset.del);await kv.set(K_V,visits);render();toast('הביקור נמחק')}
+  if(op){const d=docs.find(x=>x.id===op.dataset.open),u=URL.createObjectURL(d.blob),a=document.createElement('a');a.href=u;a.target='_blank';a.download=d.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+  if(df&&confirm('למחוק את המסמך?')){await files.del(df.dataset.delfile);docs=docs.filter(x=>x.id!==df.dataset.delfile);render()}
+  if(ce)openContact(ce.dataset.cedit);
+  if(cw){sTo.value='clinic';sClinic.value=cw.dataset.cwa;sTpl.value='thanks';syncSend();openS('sendSheet')}
+  if(ct)location.href='tel:'+((contacts[ct.dataset.ctel]||{}).phone||'');
+};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ============== backup ============== */
+document.getElementById('bkOut').onclick=()=>{dl(new Blob([JSON.stringify({visits,contacts,settings})],{type:'application/json'}),`גיבוי ביקורים ${iso(new Date())}.json`);toast('הגיבוי נשמר')};
+document.getElementById('bkIn').onclick=()=>document.getElementById('bkFile').click();
+document.getElementById('bkFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const d=JSON.parse(r.result),arr=Array.isArray(d)?d:d.visits;
+      if(!Array.isArray(arr))throw 0;
+      const ids=new Set(visits.map(v=>v.id));
+      visits=visits.concat(arr.filter(v=>!ids.has(v.id)));
+      if(d.contacts)contacts={...d.contacts,...contacts};
+      if(d.settings&&!settings.phone)settings=d.settings;
+      await kv.set(K_V,visits);await kv.set(K_C,contacts);await kv.set(K_S,settings);
+      render();toast(`שוחזרו ${arr.length} ביקורים`);
+    }catch(err){toast('הקובץ לא תקין — צריך קובץ גיבוי מהמערכת')}
+  };
+  r.readAsText(f);e.target.value='';
+};
+
+/* ============== init ============== */
+(async()=>{
+  visits=await kv.get(K_V,[]);contacts=await kv.get(K_C,{});settings=await kv.get(K_S,{name:'',phone:'',mail:''});
+  try{docs=await files.all()||[]}catch(e){files.ok=false;docs=[]}
+  render();
+})();
+</script>
+</body>
+</html>
